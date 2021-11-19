@@ -1,0 +1,7 @@
+/.project
+/.pydevproject
+*.pyc
+*/__pycache__/*
+/outputs/*
+*.xlsx
+*.csv

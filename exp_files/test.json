@@ -1,0 +1,19 @@
+{ 
+	"run_duration": 500,
+	"net_type":3,
+	"burn_in":10,
+	"experiments":
+	[
+		{
+			"schedules":
+			[
+				{
+					"schedule_1_scale":120,
+					"schedule_2_scale":20,
+					"FDF_1":25,
+					"FDF_2":75
+				}
+			]
+		}
+	]
+}
