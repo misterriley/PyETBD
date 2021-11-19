@@ -41,22 +41,22 @@ Note: not all of these have been tested. Some are never used in practice.
 
 ## Keys
 
-"SDID"
-ID value for discriminative stimulus. 
-May be integers 0 - 6 for the rainbow colors ROYGBIV, or -999 indicating no SD.
-Default: 0 (RED)
+"SDID"\
+ID value for discriminative stimulus. \
+May be integers 0 - 6 for the rainbow colors ROYGBIV, or -999 indicating no SD.\
+Default: 0 (RED)\
 
-"schedule_1_type"
-"schedule_2_type"
-The types of reinforcement schedules applied to the two target classes.
-May be "RI", "VI", "RR", "VR", "PROB" or "EXT".
-Default: "RI"
+"schedule_1_type"\
+"schedule_2_type"\
+The types of reinforcement schedules applied to the two target classes.\
+May be "RI", "VI", "RR", "VR", "PROB" or "EXT".\
+Default: "RI"\
 
-"FDF_1"
-"FDF_2"
-The fitness density functions for the two target classes.
-May be a positive number.
-Default: 40
+"FDF_1"\
+"FDF_2"\
+The fitness density functions for the two target classes.\
+May be a positive number.\
+Default: 40\
 
 "target_class_1_min"
 "target_class_1_max"
