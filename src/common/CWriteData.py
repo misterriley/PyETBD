@@ -42,6 +42,9 @@ class CWriteData(object):
 		# 'MsgBox("Punishment mag:  " + eis.get_punishment_mag().__str__() + "	 get_mut_func_param():  " + eis.get_mut_func_param())
 		# 'Stop
 
+	def set_num_actual_generations(self, value):
+		self.m_num_actual_generations = value
+
 	def get_file_stub(self):
 		return self.m_fileStub
 
@@ -71,6 +74,8 @@ class CWriteData(object):
 			while True:
 				dir_path = DEFAULT_OUTPUT_DIR + str(exp_index) + "/"
 				if not os.path.exists(dir_path):
+					os.makedirs(dir_path)
+					print("making directory " + dir_path)
 					self.m_outFilePath = dir_path
 					break
 				exp_index += 1
@@ -153,7 +158,8 @@ class CWriteData(object):
 			self.write_line(outFile, "Repetition " + str(k))
 			for j in range(eis.get_num_schedules()):
 				self.write_line(outFile, "Schedule " + str(j))
-				for i in range(0, self.get_generations(), 10):
+				num_gens = int(self.m_num_actual_generations[k, j]) if eis.get_use_sp_schedules() else self.get_generations()
+				for i in range(0, num_gens, 10):
 					# strLineToWrite = ""
 					# for m = 0 To 9
 					# 	#Evidently I don't have to cast to strings here.  Guess  that Option thing is not set.
@@ -214,8 +220,8 @@ class CWriteData(object):
 			self.write_line(outFile, "Output Nodes," + str(bis.get_num_output_nodes()))
 		if is_one:
 			self.write_line(outFile, "Firing Hidden Nodes," + str(bis.get_net_one_num_firing_hidden_nodes()))
-			self.write_line(outFile, "Magnitude Multiplier," + str(bis.get_net_one_magnitude_multiplier()))
-			self.write_line(outFile, "Magnitude Numerator," + str(bis.get_net_one_magnitude_numerator()))
+			self.write_line(outFile, "Magnitude slope," + str(bis.get_net_one_magnitude_slope()))
+			self.write_line(outFile, "Magnitude intercept," + str(bis.get_net_one_magnitude_intercept()))
 
 	def write_csv_exp_params(self, outFile):
 		# Write experiment information
@@ -303,8 +309,96 @@ class CWriteData(object):
 				for intRep in range(self.get_repetitions()):  # One repetition per worksheet
 					self.write_repetition_sheet(intRep, objWS, intNumBlocks, intEmittedPheno, blnPhenoReinforced, blnPhenoPunished)
 
+				if self.m_stuExperimentInfo.get_use_sp_schedules():
+					objWS.append(objWB.add_worksheet("SP analysis"))
+					self.write_sp_analysis(objWS[-1], blnPhenoReinforced, intEmittedPheno)
+
 		except EnvironmentError as err:
 			print(err)
+
+	def write_sp_analysis(self, exp_sheet, blnPhenoReinforced, intEmittedPheno):
+		row = self.write_excel_and_increment_row(exp_sheet, ["Schedule", "Reinforcer Index (up to)", "RI", "Ratio", "B1", "B2", "log(B1/B2)"], 1)
+
+		eis = self.get_experiment_info_structure()
+		rtc_seq_responses = {}
+		for intSched in range(eis.get_num_schedules()):
+
+			count_1_list = [0] * eis.get_sp_stop_count(intSched)
+			count_2_list = [0] * eis.get_sp_stop_count(intSched)
+
+			for intRep in range(eis.get_repetitions()):
+				current_reinforcer = 0
+				count_1 = 0
+				count_2 = 0
+
+				intNumGens = int(self.m_num_actual_generations[intRep, intSched])
+
+				last_rtc = None
+				second_last_rtc = None
+				third_last_rtc = None
+
+				for intGen in range(intNumGens):
+					pheno = intEmittedPheno[intRep, intSched, intGen]
+					tc = self.check_for_targets(pheno)
+					if tc != 0:
+						key = "_" + str(tc)
+						self.safe_increment_value(rtc_seq_responses, key)
+						if last_rtc is not None:
+							key = str(last_rtc) + key
+							self.safe_increment_value(rtc_seq_responses, key)
+						if second_last_rtc is not None:
+							key = str(second_last_rtc) + key
+							self.safe_increment_value(rtc_seq_responses, key)
+						if third_last_rtc is not None:
+							key = str(third_last_rtc) + key
+							self.safe_increment_value(rtc_seq_responses, key)
+
+						if tc == 1:
+							count_1 += 1
+						elif tc == 2:
+							count_2 += 1
+
+						if blnPhenoReinforced[intRep, intSched, intGen]:
+							count_1_list[current_reinforcer] += count_1
+							count_2_list[current_reinforcer] += count_2
+
+							count_1 = 0
+							count_2 = 0
+
+							current_reinforcer += 1
+							third_last_rtc = second_last_rtc
+							second_last_rtc = last_rtc
+							last_rtc = tc
+
+			for intReinforcer in range(eis.get_sp_stop_count(intSched)):
+				c1 = count_1_list[intReinforcer]
+				c2 = count_2_list[intReinforcer]
+				row = self.write_excel_and_increment_row(exp_sheet, [intSched + 1, intReinforcer + 1, eis.get_sp_mean(intSched), eis.get_sp_ratio(intSched), c1, c2, self.safe_log_of_ratio(c1, c2)], row)
+
+		row = self.write_excel_and_increment_row(exp_sheet, ["R pattern", "Pattern Length", "log(B1/B2)"], row)
+
+		row = self.write_log_ratio_from_key(exp_sheet, rtc_seq_responses, "", row)
+		for last_rtc in range(1, 3):
+			key = str(last_rtc)
+			row = self.write_log_ratio_from_key(exp_sheet, rtc_seq_responses, key, row)
+			for second_last_rtc in range(1, 3):
+				key2 = str(second_last_rtc) + key
+				row = self.write_log_ratio_from_key(exp_sheet, rtc_seq_responses, key2, row)
+				for third_last_rtc in range(1, 3):
+					key3 = str(third_last_rtc) + key2
+					row = self.write_log_ratio_from_key(exp_sheet, rtc_seq_responses, key3, row)
+
+	def write_log_ratio_from_key(self, exp_sheet, dictionary, key, row_num):
+		b1 = dictionary.get(key + "_1", 0)
+		b2 = dictionary.get(key + "_2", 0)
+		row = self.write_excel_and_increment_row(exp_sheet, [key, len(key), self.safe_log_of_ratio(b1, b2)], row_num)
+		return row
+
+	def safe_increment_value(self, library, key):
+		if key in library:
+			library[key] += 1
+		else:
+			library[key] = 1
 
 	def write_excel_cover_sheet(self, objWS):
 		# Write Organism info to "Experiment" sheet.  Note that not all the organism info is written, only the most common settings.
@@ -337,8 +431,8 @@ class CWriteData(object):
 			row = self.write_excel_and_increment_row(exp_sheet, ["Output Nodes", bis.get_num_output_nodes()], row)
 		if is_one:
 			row = self.write_excel_and_increment_row(exp_sheet, ["Firing Hidden Nodes", bis.get_net_one_num_firing_hidden_nodes()], row)
-			row = self.write_excel_and_increment_row(exp_sheet, ["Magnitude Constant", bis.get_net_one_magnitude_multiplier()], row)
-			row = self.write_excel_and_increment_row(exp_sheet, ["Magnitude Numerator", bis.get_net_one_magnitude_numerator()], row)
+			row = self.write_excel_and_increment_row(exp_sheet, ["Magnitude slope", bis.get_net_one_magnitude_slope()], row)
+			row = self.write_excel_and_increment_row(exp_sheet, ["Magnitude intercept", bis.get_net_one_magnitude_intercept()], row)
 
 	def write_excel_exp_params(self, exp_sheet):
 
@@ -348,8 +442,11 @@ class CWriteData(object):
 			row_num = i + 33
 			strRow = str(row_num)
 			write_list = [i + 1]  # +1 because humans are 1-indexed
-			write_list.append(eis.get_sched_value_1(i).__str__() + "(" + eis.get_FDF_mean_1(i).__str__() + ")")
-			write_list.append(eis.get_sched_value_2(i).__str__() + "(" + eis.get_FDF_mean_2(i).__str__() + ")")
+			if eis.get_use_sp_schedules():
+				write_list.append("RI " + eis.get_sp_mean(i).__str__() + " ratio " + eis.get_sp_ratio(i).__str__() + " (FDF mean " + eis.get_sp_FDF(i).__str__() + ")")
+			else:
+				write_list.append(eis.get_sched_value_1(i).__str__() + "(" + eis.get_FDF_mean_1(i).__str__() + ")")
+				write_list.append(eis.get_sched_value_2(i).__str__() + "(" + eis.get_FDF_mean_2(i).__str__() + ")")
 			exp_sheet.write_row("A" + strRow + ":C" + strRow, write_list)
 
 		return row_num
@@ -406,7 +503,7 @@ class CWriteData(object):
 		# Write column headers for this repetition
 		objWS[intRep + 1].write_row("A1:G1",
 								["Sched", "P1", "R1", "B1", "P2", "R2", "B2",
-								"Sched (Total)", "P1", "R1", "B1", "P2", "R2", "B2", "log(P1/P2)", "log(M1/M2)", "log(R1/R2)", "log(B1/B2)",
+								"Sched (Total)", "P1", "R1", "B1", "P2", "R2", "B2", "log(P1/P2)", "log(M1/M2)", "log(R1/R2)", "log(B1/B2)", "changeovers",
 								"GML Parameters", "a", "log b", "cGML Parameters", "ar", "am", "log b"])  # This works fine.
 
 		# write out a summary for GML fits
@@ -415,14 +512,17 @@ class CWriteData(object):
 		yx_locs = "R2:R" + max_sched_loc + ", Q2:Q" + max_sched_loc
 		slope_formula = "=SLOPE(" + yx_locs + ")"
 		intercept_formula = "=INTERCEPT(" + yx_locs + ")"
-		objWS[intRep + 1].write_row("T2:U2", [slope_formula, intercept_formula])
+		objWS[intRep + 1].write_row("U2:V2", [slope_formula, intercept_formula])
 
 		linest_formula = "=LINEST(R2:R" + max_sched_loc + ",P2:Q" + max_sched_loc + ",TRUE,TRUE)"
-		objWS[intRep + 1].write("W2", linest_formula)
+		objWS[intRep + 1].write("X2", linest_formula)
 
 		for intSched in range(n_sched):
 
 			intR1Total = intB1Total = intR2Total = intB2Total = intP1Total = intP2Total = 0
+
+			last_tc = None
+			changeover_count = 0
 
 			for intBlock in range(intNumBlocks):  # One block per row of worksheet
 				intR1 = intB1 = intR2 = intB2 = intP1 = intP2 = 0  # Initialize totals
@@ -435,6 +535,7 @@ class CWriteData(object):
 						pass
 						# Not a target
 					elif intTargetStatus == 1:
+
 						# Target 1
 						intB1 += 1
 						if blnPhenoReinforced[intRep, intSched, intGen]:
@@ -442,6 +543,11 @@ class CWriteData(object):
 
 						if blnPhenoPunished[intRep, intSched, intGen]:
 							intP1 += 1
+
+						if last_tc == 2:
+							changeover_count += 1
+
+						last_tc = 1
 
 					elif intTargetStatus == 2:
 						# Target 2
@@ -452,6 +558,10 @@ class CWriteData(object):
 						if blnPhenoPunished[intRep, intSched, intGen]:
 							intP2 += 1
 
+						if last_tc == 1:
+							changeover_count += 1
+
+						last_tc = 2
 				#-------------------------------------------------------------------------------------------------------------------
 
 				# intR1, intB1, intR2, intB2, intP1, and intP2 should now be totalled
@@ -467,13 +577,13 @@ class CWriteData(object):
 
 			# Write out the totals for each schedule
 			total_row_index = intSched + 2
-			xl_locs = "H" + str(total_row_index) + ":Q" + str(total_row_index)
+			xl_locs = "H" + str(total_row_index) + ":R" + str(total_row_index)
 			lp = self.safe_log_of_ratio(intP1Total, intP2Total)
 			lr = self.safe_log_of_ratio(intR1Total, intR2Total)
 			lm = self.safe_log_of_ratio(eis.get_FDF_mean_2(intSched), eis.get_FDF_mean_1(intSched))  # backwards cause inversely proportional to magnitude
 			lb = self.safe_log_of_ratio(intB1Total, intB2Total)
 
-			objWS[intRep + 1].write_row(xl_locs, [intSched + 1, intP1Total, intR1Total, intB1Total, intP2Total, intR2Total, intB2Total, lp, lm, lr, lb])
+			objWS[intRep + 1].write_row(xl_locs, [intSched + 1, intP1Total, intR1Total, intB1Total, intP2Total, intR2Total, intB2Total, lp, lm, lr, lb, changeover_count])
 
 	def safe_log_of_ratio(self, numerator, denominator):
 		return numpy.log10(numerator / denominator) if denominator * numerator > 0 else ""

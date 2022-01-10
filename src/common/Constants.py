@@ -53,6 +53,8 @@ SCHED_TYPE_RI = 0
 SCHED_TYPE_RR = 1
 SCHED_TYPE_EXT = 2
 SCHED_TYPE_PROB = 3
+SCHED_TYPE_SP = 4  # Stubbs and Pliskoff (1969) - dependent VI with specified ratios
+SCHED_TYPE_NONE = 5
 
 ORG_TYPE_ETBD = 0
 ORG_TYPE_NET_ONE = 1

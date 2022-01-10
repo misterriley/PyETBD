@@ -8,6 +8,7 @@ import json
 from src.common import Constants
 from src.common import Converter
 
+# Vanilla ETBD parameters
 _EXPERIMENTS = "experiments"
 _STAR_JSON = "*.json"
 _SDID = "SDID"
@@ -60,14 +61,24 @@ _SCHEDULES = "schedules"
 _CROSSOVER_POINTS = "crossover_points"
 _GAUSSIAN_MUTATION_SD = "gaussian_mutation_sd"
 _MUTATION_BOUNDARY = "mutation_boundary"
+_RESET_BETWEEN_RUNS = "reset_between_runs"
+
+# Non-ETBD organisms
 _ORG_TYPE = "org_type"
 _NUM_HIDDEN_NODES = "num_hidden_nodes"
 _NUM_OUTPUT_NODES = "num_output_nodes"
 _NET_ONE_NUM_FIRING_HIDDEN_NODES = "net_one_num_firing_hidden_nodes"
-_NET_ONE_MAGNITUDE_MULTIPLIER = "net_one_magnitude_multiplier"
-_NET_ONE_MAGNITUDE_NUMERATOR = "net_one_magnitude_numerator"
-_RESET_BETWEEN_RUNS = "reset_between_runs"
+_NET_ONE_MAGNITUDE_SLOPE = "net_one_magnitude_slope"
+_NET_ONE_MAGNITUDE_INTERCEPT = "net_one_magnitude_intercept"
 
+# Stubbs and Pliskoff schedules
+_USE_SP_SCHEDULES = "use_sp_schedules"
+_SP_MEAN = "sp_mean"
+_SP_RATIO = "sp_ratio"
+_SP_FDF = "sp_FDF"
+_SP_STOP_COUNT = "sp_stop_count"
+
+# Vanilla ETBD parameters
 _DEFAULT_MUTATION_RATE = 10
 _DEFAULT_MUTATION_METHOD = "BITFLIP BY INDIVIDUAL"
 _DEFAULT_RECOMBINATION_METHOD = "BITWISE"
@@ -114,13 +125,22 @@ _DEFAULT_VISCOSITY_SELECTED_INDEX = 0
 _DEFAULT_CROSSOVER_POINTS = 0
 _DEFAULT_GAUSSIAN_MUTATION_SD = 10
 _DEFAULT_MUTATION_BOUNDARY = Constants.MUTATION_BOUNDARY_WRAP
+_DEFAULT_RESET_BETWEEN_RUNS = True
+
+# Non-ETBD organisms
 _DEFAULT_ORG_TYPE = "ETBD"
 _DEFAULT_NUM_HIDDEN_NODES = 100
 _DEFAULT_NUM_OUTPUT_NODES = 10
 _DEFAULT_NONFHN = 2
-_DEFAULT_NET_ONE_MAGNITUDE_MULTIPLIER = 1.892
-_DEFAULT_NET_ONE_MAGNITUDE_NUMERATOR = .2
-_DEFAULT_RESET_BETWEEN_RUNS = True
+_DEFAULT_NET_ONE_MAGNITUDE_SLOPE = -.378
+_DEFAULT_NET_ONE_MAGNITUDE_INTERCEPT = .2
+
+# Stubbs and Pliskoff schedules
+_DEFAULT_USE_SP_SCHEDULES = False
+_DEFAULT_SP_DENSITY = None
+_DEFAULT_SP_RATIO = 1
+_DEFAULT_SP_FDF = 40
+_DEFAULT_SP_STOP_COUNT = 10
 
 
 def load_file(input_file = None, print_status = False):
@@ -142,11 +162,26 @@ class JSONData(object):
 	def __init__(self, data_dict):
 		self.data_dict = data_dict
 
-	def get_net_one_magnitude_multiplier(self, experiment_index = 0):
-		return self.get_from_experiment(_NET_ONE_MAGNITUDE_MULTIPLIER, experiment_index, _DEFAULT_NET_ONE_MAGNITUDE_MULTIPLIER)
+	def get_use_sp_schedules(self, experiment_index):
+		return self.get_from_experiment(_USE_SP_SCHEDULES, experiment_index, _DEFAULT_USE_SP_SCHEDULES)
 
-	def get_net_one_magnitude_numerator(self, experiment_index = 0):
-		return self.get_from_experiment(_NET_ONE_MAGNITUDE_NUMERATOR, experiment_index, _DEFAULT_NET_ONE_MAGNITUDE_NUMERATOR)
+	def get_sp_ratio(self, experiment_index, schedule_index):
+		return self.get_from_schedule(_SP_RATIO, experiment_index, schedule_index, _DEFAULT_SP_RATIO)
+
+	def get_sp_mean(self, experiment_index, schedule_index):
+		return self.get_from_schedule(_SP_MEAN, experiment_index, schedule_index, _DEFAULT_SP_DENSITY)
+
+	def get_sp_FDF(self, experiment_index, schedule_index):
+		return self.get_from_schedule(_SP_FDF, experiment_index, schedule_index, _DEFAULT_SP_FDF)
+
+	def get_sp_stop_count(self, experiment_index, schedule_index):
+		return self.get_from_schedule(_SP_STOP_COUNT, experiment_index, schedule_index, _DEFAULT_SP_STOP_COUNT)
+
+	def get_net_one_magnitude_slope(self, experiment_index = 0):
+		return self.get_from_experiment(_NET_ONE_MAGNITUDE_SLOPE, experiment_index, _DEFAULT_NET_ONE_MAGNITUDE_SLOPE)
+
+	def get_net_one_magnitude_intercept(self, experiment_index = 0):
+		return self.get_from_experiment(_NET_ONE_MAGNITUDE_INTERCEPT, experiment_index, _DEFAULT_NET_ONE_MAGNITUDE_INTERCEPT)
 
 	def get_num_hidden_nodes(self):
 		return self.get(_NUM_HIDDEN_NODES, _DEFAULT_NUM_HIDDEN_NODES)
@@ -217,11 +252,17 @@ class JSONData(object):
 		return experiments[experiment_index]
 
 	def get_sched_type_1(self, experiment_index, schedule_index = -1):
-		ret = self.get_from_schedule(_SCHED_TYPE_1, experiment_index, schedule_index, _DEFAULT_SCHED_TYPE)
+		if self.get_use_sp_schedules(experiment_index):
+			ret = "SP"
+		else:
+			ret = self.get_from_schedule(_SCHED_TYPE_1, experiment_index, schedule_index, _DEFAULT_SCHED_TYPE)
 		return Converter.convert_to_sched_type(ret)
 
 	def get_sched_type_2(self, experiment_index, schedule_index = -1):
-		ret = self.get_from_schedule(_SCHED_TYPE_2, experiment_index, schedule_index, _DEFAULT_SCHED_TYPE)
+		if self.get_use_sp_schedules(experiment_index):
+			ret = "SP"
+		else:
+			ret = self.get_from_schedule(_SCHED_TYPE_2, experiment_index, schedule_index, _DEFAULT_SCHED_TYPE)
 		return Converter.convert_to_sched_type(ret)
 
 	def get_FDF_mean_1(self, experiment_index, schedule_index):

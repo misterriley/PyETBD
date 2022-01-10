@@ -38,17 +38,17 @@ class BehaviorsInfo(object):
 		self.m_net_one_magnitude_multiplier = None
 		self.m_net_one_magnitude_numerator = None
 
-	def get_net_one_magnitude_multiplier(self):
-		return self.m_net_one_magnitude_multiplier
+	def get_net_one_magnitude_slope(self):
+		return self.m_net_one_magnitude_slope
 
-	def set_net_one_magnitude_multiplier(self, value):
-		self.m_net_one_magnitude_multiplier = value
+	def set_net_one_magnitude_slope(self, value):
+		self.m_net_one_magnitude_slope = value
 
-	def get_net_one_magnitude_numerator(self):
-		return self.m_net_one_magnitude_numerator
+	def get_net_one_magnitude_intercept(self):
+		return self.m_net_one_magnitude_intercept
 
-	def set_net_one_magnitude_numerator(self, value):
-		self.m_net_one_magnitude_numerator = value
+	def set_net_one_magnitude_intercept(self, value):
+		self.m_net_one_magnitude_intercept = value
 
 	def get_net_one_num_firing_hidden_nodes(self):
 		return self.m_net_one_num_firing_hidden_nodes

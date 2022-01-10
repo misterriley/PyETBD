@@ -31,7 +31,7 @@ class frmExperiment(object):
 		# test = frmConcSchedules.txtPheno1Hi.Text
 
 		self.m_intExpNum = json_data.get_num_experiments()
-		for exp_index in range(0, self.m_intExpNum):
+		for exp_index in range(self.m_intExpNum):
 			num_schedules = json_data.get_num_schedules(exp_index)
 			ep = ExperimentParameters(num_schedules)
 
@@ -61,6 +61,7 @@ class frmExperiment(object):
 			ep.set_t_2_hi(json_data.get_t_2_hi(exp_index))
 			ep.set_organism_type(json_data.get_organism_type())
 			ep.set_reset_between_runs(json_data.get_reset_between_runs())
+			ep.set_use_sp_schedules(json_data.get_use_sp_schedules(exp_index))
 
 			# exp_index now equals intN
 			# raise AssertionError(CStr(exp_index))
@@ -69,10 +70,15 @@ class frmExperiment(object):
 
 			# Load the arrays into the data structure.
 			for schedule_index in range(json_data.get_num_schedules(exp_index)):
-				ep.set_sched_mag_1(schedule_index, json_data.get_FDF_mean_1(exp_index, schedule_index))
-				ep.set_sched_mag_2(schedule_index, json_data.get_FDF_mean_2(exp_index, schedule_index))
+				ep.set_FDF_mean_1(schedule_index, json_data.get_FDF_mean_1(exp_index, schedule_index))
+				ep.set_FDF_mean_2(schedule_index, json_data.get_FDF_mean_2(exp_index, schedule_index))
 				ep.set_sched_value_1(schedule_index, json_data.get_sched_value_1(exp_index, schedule_index))
 				ep.set_sched_value_2(schedule_index, json_data.get_sched_value_2(exp_index, schedule_index))
+
+				ep.set_sp_mean(schedule_index, json_data.get_sp_mean(exp_index, schedule_index))
+				ep.set_sp_FDF(schedule_index, json_data.get_sp_FDF(exp_index, schedule_index))
+				ep.set_sp_ratio(schedule_index, json_data.get_sp_ratio(exp_index, schedule_index))
+				ep.set_sp_stop_count(schedule_index, json_data.get_sp_stop_count(exp_index, schedule_index))
 
 				# These If...Then blocks are for punishment
 				if json_data.punish_RI_is_enabled():
@@ -142,13 +148,12 @@ class frmExperiment(object):
 		self.add_experiments(json_data)
 		self.load_organism()
 
-		for i in range(0, self.m_intExpNum):
+		for i in range(self.m_intExpNum):
 			print("starting experiment " + str(i))
 			# Run the experiment and write the data.
 			objRunExperiment = CRunConcurrent(self.m_frmOrganism.get_creature(), i, self.m_structExpInfo[i])
 			objRunExperiment.giddyup()
 			print("finishing experiment " + str(i))
 
-		# playsound("..\\..\\resources\\22Fillywhinnygrunt2000.wav")  # as Jack would have wanted
 		print("Done giddyuped!")
 

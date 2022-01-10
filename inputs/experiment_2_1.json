@@ -1,8 +1,7 @@
 { 
 	"schedule_1_type":"VR",
 	"schedule_2_type":"VR",
-	"run_duration": 20500,
-	"org_type":"ETBD",
+	"org_type":"NET_ONE",
 	"repetitions":10,
 	"experiments":
 	[
@@ -48,8 +47,6 @@
 				{
 					"schedule_1_scale":3,
 					"schedule_2_scale":3.3
-					
-					
 				},
 				{
 					"schedule_1_scale":3,

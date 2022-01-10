@@ -58,6 +58,7 @@ _SCHED_TYPE_DICT = {
 	"RR": Constants.SCHED_TYPE_RR,
 	"PROB": Constants.SCHED_TYPE_PROB,
 	"EXT": Constants.SCHED_TYPE_EXT,
+	"SP": Constants.SCHED_TYPE_SP
 	}
 
 _MUT_BOUNDARY_DICT = {

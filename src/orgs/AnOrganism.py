@@ -82,8 +82,8 @@ class AnOrganism:
 		stuBehaviorsInfo.set_num_hidden_nodes(json_data.get_num_hidden_nodes())
 		stuBehaviorsInfo.set_num_output_nodes(json_data.get_num_output_nodes())
 		stuBehaviorsInfo.set_net_one_num_firing_hidden_nodes(json_data.get_net_one_num_firing_hidden_nodes())
-		stuBehaviorsInfo.set_net_one_magnitude_multiplier(json_data.get_net_one_magnitude_multiplier())
-		stuBehaviorsInfo.set_net_one_magnitude_numerator(json_data.get_net_one_magnitude_numerator())
+		stuBehaviorsInfo.set_net_one_magnitude_slope(json_data.get_net_one_magnitude_slope())
+		stuBehaviorsInfo.set_net_one_magnitude_intercept(json_data.get_net_one_magnitude_intercept())
 
 		return stuBehaviorsInfo
 

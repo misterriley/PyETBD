@@ -17,8 +17,8 @@ class NetOneOrganism(AnOrganism):
 		self.num_output_nodes = json_data.get_num_output_nodes()
 		self.hidden_firing_nodes = json_data.get_net_one_num_firing_hidden_nodes()
 		self.mutation_rate = json_data.get_mutation_rate()
-		self.net_one_magnitude_multiplier = json_data.get_net_one_magnitude_multiplier()
-		self.net_one_magnitude_numerator = json_data.get_net_one_magnitude_numerator()
+		self.net_one_magnitude_slope = json_data.get_net_one_magnitude_slope()
+		self.net_one_magnitude_intercept = json_data.get_net_one_magnitude_intercept()
 
 	def reset_state(self):
 		# real-valued synapse matrix, dimension is h x o (h = num hidden, o = num output)
@@ -66,9 +66,7 @@ class NetOneOrganism(AnOrganism):
 		# the selection parameter comes in as an FDF, must go out as a probability of flipping synapses
 		# selectionParameter == infinity --> return 0
 		# selectionParameter == 0 --> return 1
-		# in the absence of anything better, we use 1/(1 + ax) where a is the net one magnitude constant
-		# and x is the selectionParameter
-		return self.net_one_magnitude_numerator / (1 + self.net_one_magnitude_multiplier * numpy.log10(selectionParameter / 40))
+		return self.net_one_magnitude_intercept + self.net_one_magnitude_slope * numpy.log10(selectionParameter / 40)
 
 	def set_selection(self, selectionParameter, value):
 
@@ -84,12 +82,26 @@ class NetOneOrganism(AnOrganism):
 		self.apply_mutation()
 
 	def apply_mutation(self):
+
+		# the following code would flip each bit independently - it doesn't seem to matter which one I use
+		#
+		# # rands = numpy.random.uniform(size = self.num_hidden_nodes)
+		#
+		# # flips = rands < self.mutation_rate / 100.0
+		# # flipped_nodes = flips.nonzero()[0]
+		# # locs = numpy.random.randint(0, self.num_output_nodes, size = len(flipped_nodes))
+		# # for i in range(len(flipped_nodes)):
+		# 	# self.synapses[flipped_nodes[i], locs[i]] *= -1
+		#
+		#
+
 		# mutation in net one means randomly flipping some weights 1 --> -1 or -1 --> 1
-		target_weights = self.synapses * -1
-		rands = numpy.random.uniform(size = target_weights.shape)
+		flipped_weights = self.synapses * -1
+
+		rands = numpy.random.uniform(size = flipped_weights.shape)
 		mutation_rate = self.mutation_rate
 
 		mutation_prob = (mutation_rate / 100.0) / self.num_output_nodes
 
-		self.synapses = numpy.where(rands < mutation_prob, target_weights, self.synapses)
+		self.synapses = numpy.where(rands < mutation_prob, flipped_weights, self.synapses)
 

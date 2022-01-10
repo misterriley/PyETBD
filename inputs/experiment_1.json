@@ -1,8 +1,11 @@
 { 
 	"org_type":"NET_ONE",
+	"repetitions":10,
+	"mutation_rate":14,
 	"experiments":
 	[
 		{
+			
 			"schedules":
 			[
 				{

@@ -41,10 +41,49 @@ class ExperimentParameters(object):
 
 		self.m_SchedValues1 = [None] * num_schedules
 		self.m_SchedValues2 = [None] * num_schedules
-		self.m_Mags1 = [None] * num_schedules
-		self.m_Mags2 = [None] * num_schedules
+		self.m_FDF_means_1 = [None] * num_schedules
+		self.m_FDF_means_2 = [None] * num_schedules
 
 		self.reset_between_runs = None
+
+		self.use_sp_schedules = None
+		self.m_sp_ratios = [None] * num_schedules
+		self.m_sp_means = [None] * num_schedules
+		self.m_sp_FDFs = [None] * num_schedules
+		self.m_sp_stop_counts = [None] * num_schedules
+
+	def get_punishment_ri_1(self, schedule_index):
+		return self.m_SinglePunishmentRI[schedule_index]
+
+	def get_sp_stop_count(self, schedule_index):
+		return self.m_sp_stop_counts[schedule_index]
+
+	def get_sp_FDF(self, schedule_index):
+		return self.m_sp_FDFs[schedule_index]
+
+	def get_sp_mean(self, schedule_index):
+		return self.m_sp_means[schedule_index]
+
+	def get_sp_ratio(self, schedule_index):
+		return self.m_sp_ratios[schedule_index]
+
+	def set_sp_stop_count(self, schedule_index, value):
+		self.m_sp_stop_counts[schedule_index] = value
+
+	def set_sp_FDF(self, schedule_index, value):
+		self.m_sp_FDFs[schedule_index] = value
+
+	def set_sp_mean(self, schedule_index, value):
+		self.m_sp_means[schedule_index] = value
+
+	def set_sp_ratio(self, schedule_index, value):
+		self.m_sp_ratios[schedule_index] = value
+
+	def set_use_sp_schedules(self, value):
+		self.use_sp_schedules = value
+
+	def get_use_sp_schedules(self):
+		return self.use_sp_schedules
 
 	def set_reset_between_runs(self, value):
 		self.reset_between_runs = value
@@ -119,10 +158,10 @@ class ExperimentParameters(object):
 		return Converter.convert_sched_type_to_string(self.m_SchedType2)
 
 	def get_FDF_mean_1(self, schedule_index):
-		return self.m_Mags1[schedule_index]
+		return self.m_FDF_means_1[schedule_index]
 
 	def get_FDF_mean_2(self, schedule_index):
-		return self.m_Mags2[schedule_index]
+		return self.m_FDF_means_2[schedule_index]
 
 	def get_t_1_lo(self):
 		return self.m_T1Lo
@@ -160,11 +199,11 @@ class ExperimentParameters(object):
 	def set_sched_type_2(self, value):
 		self.m_SchedType2 = value
 
-	def set_sched_mag_1(self, schedule_index, value):
-		self.m_Mags1[schedule_index] = value
+	def set_FDF_mean_1(self, schedule_index, value):
+		self.m_FDF_means_1[schedule_index] = value
 
-	def set_sched_mag_2(self, schedule_index, value):
-		self.m_Mags2[schedule_index] = value
+	def set_FDF_mean_2(self, schedule_index, value):
+		self.m_FDF_means_2[schedule_index] = value
 
 	def set_t_1_lo(self, value):
 		self.m_T1Lo = value
