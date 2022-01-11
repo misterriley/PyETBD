@@ -159,7 +159,9 @@ class JSONData(object):
 	classdocs
 	'''
 
-	def __init__(self, data_dict):
+	def __init__(self, data_dict = None):
+		if data_dict is None:
+			data_dict = {_EXPERIMENTS:{}}
 		self.data_dict = data_dict
 
 	def get_use_sp_schedules(self, experiment_index):
