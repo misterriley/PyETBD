@@ -81,7 +81,8 @@ _ORG_TYPE_DICT = {
 	"ETBD":Constants.ORG_TYPE_ETBD,
 	"NET_ONE":Constants.ORG_TYPE_NET_ONE,
 	"NET_TWO":Constants.ORG_TYPE_NET_TWO,
-	"NULL":Constants.ORG_TYPE_NULL
+	"PG":Constants.ORG_TYPE_PG,
+	"QL": Constants.ORG_TYPE_QL
 	}
 
 

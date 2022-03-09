@@ -52,6 +52,14 @@ class ExperimentParameters(object):
 		self.m_sp_FDFs = [None] * num_schedules
 		self.m_sp_stop_counts = [None] * num_schedules
 
+		self.m_COD = None
+
+	def get_COD(self):
+		return self.m_COD
+
+	def set_COD(self, value):
+		self.m_COD = value
+
 	def get_punishment_ri_1(self, schedule_index):
 		return self.m_SinglePunishmentRI[schedule_index]
 
@@ -103,7 +111,7 @@ class ExperimentParameters(object):
 	def get_file_stub(self):
 		return self.file_stub
 
-	def get_generations(self):
+	def get_num_generations(self):
 		return self.num_generations
 
 	def set_generations(self, value):
@@ -112,7 +120,7 @@ class ExperimentParameters(object):
 	def set_repetitions(self, value):
 		self.num_repetitions = value
 
-	def get_repetitions(self):
+	def get_num_repetitions(self):
 		return self.num_repetitions
 
 	def get_num_schedules(self):

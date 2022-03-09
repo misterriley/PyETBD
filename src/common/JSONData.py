@@ -62,14 +62,32 @@ _CROSSOVER_POINTS = "crossover_points"
 _GAUSSIAN_MUTATION_SD = "gaussian_mutation_sd"
 _MUTATION_BOUNDARY = "mutation_boundary"
 _RESET_BETWEEN_RUNS = "reset_between_runs"
+_COD = "COD"
 
 # Non-ETBD organisms
 _ORG_TYPE = "org_type"
 _NUM_HIDDEN_NODES = "num_hidden_nodes"
 _NUM_OUTPUT_NODES = "num_output_nodes"
-_NET_ONE_NUM_FIRING_HIDDEN_NODES = "net_one_num_firing_hidden_nodes"
+_NUM_FIRING_HIDDEN_NODES = "num_firing_hidden_nodes"
+
 _NET_ONE_MAGNITUDE_SLOPE = "net_one_magnitude_slope"
 _NET_ONE_MAGNITUDE_INTERCEPT = "net_one_magnitude_intercept"
+_NET_ONE_NEUTRAL_MAGNITUDE = "net_one_neutral_magnitude"
+_NET_ONE_MUTATION_RATE_MULTIPLIER = "net_one_mutation_rate_multiplier"
+
+_NET_TWO_NUM_HIDDEN_NODES = "net_two_num_hidden_nodes"
+_NET_TWO_SELECTION_STRENGTH_MULTIPLIER = "net_two_selection_strength_multiplier"
+_NET_TWO_SELECTION_STRENGTH_EXPONENT = "net_two_selection_strength_exponent"
+_NET_TWO_NEUTRAL_MAGNITUDE = "net_two_neutral_magnitude"
+
+_ML_NUM_SLOTS = "ml_num_slots"
+_ML_LEARNING_RATE = "ml_learning_rate"
+_ML_DISCOUNT_RATE = "ml_discount_rate"
+_ML_REWARD_MULTIPLIER = "ml_reward_multiplier"
+_ML_REWARD_EXPONENT = "ml_reward_exponent"
+_ML_PESSIMISM = "ml_pessimism"
+_ML_EXTINCTION = "ml_extinction"
+_ML_EPSILON = "ml_epsilon"
 
 # Stubbs and Pliskoff schedules
 _USE_SP_SCHEDULES = "use_sp_schedules"
@@ -131,9 +149,47 @@ _DEFAULT_RESET_BETWEEN_RUNS = True
 _DEFAULT_ORG_TYPE = "ETBD"
 _DEFAULT_NUM_HIDDEN_NODES = 100
 _DEFAULT_NUM_OUTPUT_NODES = 10
-_DEFAULT_NONFHN = 2
-_DEFAULT_NET_ONE_MAGNITUDE_SLOPE = -.378
-_DEFAULT_NET_ONE_MAGNITUDE_INTERCEPT = .2
+
+_DEFAULT_NET_ONE_MAGNITUDE_SLOPE = -0.596  # 64 am #-.844
+_DEFAULT_NET_ONE_MAGNITUDE_INTERCEPT = 0.463  # 65 ar .687
+_DEFAULT_NET_ONE_NEUTRAL_MAGNITUDE = 0.0592  # + .01 * (numpy.random.uniform() - .5)  # 66 COs
+_DEFAULT_NET_ONE_MUTATION_RATE_MULTIPLIER = 1
+
+# 0.691128742	0.348816477 1
+
+a = 22
+b = 3
+
+_DEFAULT_NUM_FIRING_HIDDEN_NODES = 2  # numpy.random.randint(a - b, a + b)  # 62
+
+_DEFAULT_NET_TWO_NUM_HIDDEN_NODES = 100  # numpy.random.randint(a - b, a + b)  # 63
+# with REB: 134
+# spread: 6
+# without REB: 27
+
+_DEFAULT_NET_TWO_SELECTION_STRENGTH_MULTIPLIER = .0153  # numpy.random.uniform(a - b, a + b)  # ar^ amv # 65
+# with REB: .308
+# spread: .05
+# without REB: 1.035
+
+_DEFAULT_NET_TWO_NEUTRAL_MAGNITUDE = 0  # numpy.random.uniform(a - b, a + b)  # 64 #  v^^
+# with REB: 1.108
+# spread: .03
+# without REB: 0
+
+_DEFAULT_NET_TWO_SELECTION_STRENGTH_EXPONENT = -1
+
+_DEFAULT_ML_NUM_SLOTS = int((_DEFAULT_HIGH_PHENOTYPE - _DEFAULT_LOW_PHENOTYPE) / (_DEFAULT_T_1_HI - _DEFAULT_T_1_LO))
+
+_DEFAULT_ML_LEARNING_RATE = .027  # .010 * (numpy.random.uniform() - .5) # .027
+_DEFAULT_ML_EPSILON = 0.11  # + .1 * (numpy.random.uniform() - .5)  # .11
+_DEFAULT_ML_DISCOUNT_RATE = .1  # + .06 * (numpy.random.uniform() - .5)  # .1
+_DEFAULT_ML_REWARD_EXPONENT = 1.4  # + .4 * (numpy.random.uniform() - .5) # 1.4
+
+_DEFAULT_ML_PESSIMISM = .985  # + .01 * (numpy.random.uniform() - .5)
+_DEFAULT_ML_EXTINCTION = .00009  # + .00008 * (numpy.random.uniform() - .5)
+_DEFAULT_COD = 0
+_DEFAULT_ML_REWARD_MULTIPLIER = 1
 
 # Stubbs and Pliskoff schedules
 _DEFAULT_USE_SP_SCHEDULES = False
@@ -164,6 +220,66 @@ class JSONData(object):
 			data_dict = {_EXPERIMENTS:{}}
 		self.data_dict = data_dict
 
+	def get_net_two_num_hidden_nodes(self):
+		return self.get(_NET_TWO_NUM_HIDDEN_NODES, _DEFAULT_NET_TWO_NUM_HIDDEN_NODES)
+
+	def get_ml_discount_rate(self):
+		return self.get(_ML_DISCOUNT_RATE, _DEFAULT_ML_DISCOUNT_RATE)
+
+	def get_ml_epsilon(self):
+		return self.get(_ML_EPSILON, _DEFAULT_ML_EPSILON)
+
+	def get_ml_reward_multiplier(self):
+		return self.get(_ML_REWARD_MULTIPLIER, _DEFAULT_ML_REWARD_MULTIPLIER)
+
+	def get_COD(self):
+		return self.get(_COD, _DEFAULT_COD)
+
+	def get_ml_extinction(self):
+		return self.get(_ML_EXTINCTION, _DEFAULT_ML_EXTINCTION)
+
+	def get_ml_pessimism(self):
+		return self.get(_ML_PESSIMISM, _DEFAULT_ML_PESSIMISM)
+
+	# def get_ml_reward_multiplier(self):
+		# return self.get(_ML_REWARD_MULTIPLIER, _DEFAULT_ML_REWARD_MULTIPLIER)
+
+	def get_ml_num_slots(self):
+		return self.get(_ML_NUM_SLOTS, _DEFAULT_ML_NUM_SLOTS)
+
+	def get_ml_learning_rate(self):
+		return self.get(_ML_LEARNING_RATE, _DEFAULT_ML_LEARNING_RATE)
+
+	def get_ml_reward_exponent(self):
+		return self.get(_ML_REWARD_EXPONENT, _DEFAULT_ML_REWARD_EXPONENT)
+
+	def get_net_two_neutral_magnitude(self):
+		return self.get(_NET_TWO_NEUTRAL_MAGNITUDE, _DEFAULT_NET_TWO_NEUTRAL_MAGNITUDE)
+
+	def set_net_two_neutral_magnitude(self, value):
+		self.set(_NET_TWO_NEUTRAL_MAGNITUDE, value)
+
+	def set_net_one_neutral_magnitude(self, value):
+		self.set(_NET_ONE_NEUTRAL_MAGNITUDE, value)
+
+	def set_net_one_magnitude_slope(self, value):
+		self.set(_NET_ONE_MAGNITUDE_SLOPE, value)
+
+	def set_net_one_magnitude_intercept(self, value):
+		self.set(_NET_ONE_MAGNITUDE_INTERCEPT, value)
+
+	def get_net_one_mutation_rate_multiplier(self):
+		return self.get(_NET_ONE_MUTATION_RATE_MULTIPLIER, _DEFAULT_NET_ONE_MUTATION_RATE_MULTIPLIER)
+
+	def get_net_one_neutral_magnitude(self):
+		return self.get(_NET_ONE_NEUTRAL_MAGNITUDE, _DEFAULT_NET_ONE_NEUTRAL_MAGNITUDE)
+
+	def get_net_two_selection_strength_exponent(self):
+		return self.get(_NET_TWO_SELECTION_STRENGTH_EXPONENT, _DEFAULT_NET_TWO_SELECTION_STRENGTH_EXPONENT)
+
+	def get_net_two_selection_strength_multiplier(self):
+		return self.get(_NET_TWO_SELECTION_STRENGTH_MULTIPLIER, _DEFAULT_NET_TWO_SELECTION_STRENGTH_MULTIPLIER)
+
 	def get_use_sp_schedules(self, experiment_index):
 		return self.get_from_experiment(_USE_SP_SCHEDULES, experiment_index, _DEFAULT_USE_SP_SCHEDULES)
 
@@ -191,8 +307,8 @@ class JSONData(object):
 	def get_num_output_nodes(self):
 		return self.get(_NUM_OUTPUT_NODES, _DEFAULT_NUM_OUTPUT_NODES)
 
-	def get_net_one_num_firing_hidden_nodes(self):
-		return self.get(_NET_ONE_NUM_FIRING_HIDDEN_NODES, _DEFAULT_NONFHN)
+	def get_num_firing_hidden_nodes(self):
+		return self.get(_NUM_FIRING_HIDDEN_NODES, _DEFAULT_NUM_FIRING_HIDDEN_NODES)
 
 	def get_num_experiments(self):
 		return len(self.data_dict[_EXPERIMENTS])
@@ -246,6 +362,9 @@ class JSONData(object):
 
 	def get(self, key, default = None):
 		return self.data_dict.get(key, default)
+
+	def set(self, key, value):
+		self.data_dict[key] = value
 
 	def get_experiment(self, experiment_index):
 		experiments = self.data_dict[_EXPERIMENTS]

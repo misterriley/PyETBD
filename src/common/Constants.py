@@ -57,6 +57,7 @@ SCHED_TYPE_SP = 4  # Stubbs and Pliskoff (1969) - dependent VI with specified ra
 SCHED_TYPE_NONE = 5
 
 ORG_TYPE_ETBD = 0
-ORG_TYPE_NET_ONE = 1
-ORG_TYPE_NET_TWO = 2
-ORG_TYPE_NULL = -1
+ORG_TYPE_NET_ONE = 1  # Restricted Boltzmann Machine
+ORG_TYPE_NET_TWO = 2  # Logistic Activations w/Real-Valued Synapses
+ORG_TYPE_PG = 3  # Policy Gradient
+ORG_TYPE_QL = 4  # Q-Learning

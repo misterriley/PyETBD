@@ -8,6 +8,7 @@ Created on May 24, 2021
 
 from src.common.CRunConcurrent import CRunConcurrent
 from src.common.ExperimentParameters import ExperimentParameters
+from src.common.Logger import log
 
 
 class frmExperiment(object):
@@ -22,6 +23,10 @@ class frmExperiment(object):
 		self.m_intExpNum = 0
 		self.m_structExpInfo = []
 		self.m_frmOrganism = frmOrganism
+		self.m_objConcs = []
+
+	def getObjConcs(self):
+		return self.m_objConcs
 
 	def add_experiments(self, json_data):
 
@@ -74,6 +79,8 @@ class frmExperiment(object):
 				ep.set_FDF_mean_2(schedule_index, json_data.get_FDF_mean_2(exp_index, schedule_index))
 				ep.set_sched_value_1(schedule_index, json_data.get_sched_value_1(exp_index, schedule_index))
 				ep.set_sched_value_2(schedule_index, json_data.get_sched_value_2(exp_index, schedule_index))
+
+				ep.set_COD(json_data.get_COD())
 
 				ep.set_sp_mean(schedule_index, json_data.get_sp_mean(exp_index, schedule_index))
 				ep.set_sp_FDF(schedule_index, json_data.get_sp_FDF(exp_index, schedule_index))
@@ -143,17 +150,18 @@ class frmExperiment(object):
 		#'MsgBox("Fitness landscape: " & stuLocalBehaviorsInfo.SelectionInfo.FitnessLandscape.ToString) '  It's woikin'!!!
 		#'----------------------------------------------------------------------------------------------------------------------
 
-	def run(self, json_data):
+	def run(self, json_data, print_status = True, write_outfile = True):
 
 		self.add_experiments(json_data)
 		self.load_organism()
+		self.m_objConcs = [None] * self.m_intExpNum
 
 		for i in range(self.m_intExpNum):
-			print("starting experiment " + str(i))
+			log("starting experiment " + str(i), print_status)
 			# Run the experiment and write the data.
-			objRunExperiment = CRunConcurrent(self.m_frmOrganism.get_creature(), i, self.m_structExpInfo[i])
-			objRunExperiment.giddyup()
-			print("finishing experiment " + str(i))
+			self.m_objConcs[i] = CRunConcurrent(self.m_frmOrganism.get_creature(), i, self.m_structExpInfo[i])
+			self.m_objConcs[i].giddyup(print_status, write_outfile)
+			log("finishing experiment " + str(i), print_status)
 
-		print("Done giddyuped!")
+		log("Done giddyuped!", print_status)
 

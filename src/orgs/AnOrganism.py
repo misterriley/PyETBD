@@ -81,9 +81,25 @@ class AnOrganism:
 		# Non-ETBD parameters
 		stuBehaviorsInfo.set_num_hidden_nodes(json_data.get_num_hidden_nodes())
 		stuBehaviorsInfo.set_num_output_nodes(json_data.get_num_output_nodes())
-		stuBehaviorsInfo.set_net_one_num_firing_hidden_nodes(json_data.get_net_one_num_firing_hidden_nodes())
+		stuBehaviorsInfo.set_num_firing_hidden_nodes(json_data.get_num_firing_hidden_nodes())
+
 		stuBehaviorsInfo.set_net_one_magnitude_slope(json_data.get_net_one_magnitude_slope())
 		stuBehaviorsInfo.set_net_one_magnitude_intercept(json_data.get_net_one_magnitude_intercept())
+		stuBehaviorsInfo.set_net_one_neutral_magnitude(json_data.get_net_one_neutral_magnitude())
+
+		stuBehaviorsInfo.set_net_two_neutral_magnitude(json_data.get_net_two_neutral_magnitude())
+		stuBehaviorsInfo.set_net_two_selection_strength_exponent(json_data.get_net_two_selection_strength_exponent())
+		stuBehaviorsInfo.set_net_two_selection_strength_multiplier(json_data.get_net_two_selection_strength_multiplier())
+		stuBehaviorsInfo.set_net_two_num_hidden_nodes(json_data.get_net_two_num_hidden_nodes())
+
+		stuBehaviorsInfo.set_ml_learning_rate(json_data.get_ml_learning_rate())
+		stuBehaviorsInfo.set_ml_num_slots(json_data.get_ml_num_slots())
+		stuBehaviorsInfo.set_ml_reward_multiplier(json_data.get_ml_reward_multiplier())
+		stuBehaviorsInfo.set_ml_reward_exponent(json_data.get_ml_reward_exponent())
+		stuBehaviorsInfo.set_ml_pessimism(json_data.get_ml_pessimism())
+		stuBehaviorsInfo.set_ml_extinction(json_data.get_ml_extinction())
+		stuBehaviorsInfo.set_ml_epsilon(json_data.get_ml_epsilon())
+		stuBehaviorsInfo.set_ml_discount_rate(json_data.get_ml_discount_rate())
 
 		return stuBehaviorsInfo
 

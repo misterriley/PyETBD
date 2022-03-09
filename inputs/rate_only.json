@@ -1,8 +1,8 @@
 
 { 
-	"org_type":"NET_ONE",
+	"org_type":"PG",
 	"run_duration":20500,
-	"repetitions":30,
+	"repetitions":1,
 	"experiments":
 	[
 		{

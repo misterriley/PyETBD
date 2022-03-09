@@ -34,9 +34,97 @@ class BehaviorsInfo(object):
 
 		self.m_num_output_nodes = None
 		self.m_num_hidden_nodes = None
-		self.m_net_one_num_firing_hidden_nodes = None
+		self.m_num_firing_hidden_nodes = None
+
 		self.m_net_one_magnitude_multiplier = None
 		self.m_net_one_magnitude_numerator = None
+		self.m_net_one_neutral_magnitude = None
+
+		self.m_net_two_neutral_magnitude = None
+		self.m_net_two_selection_strength_multiplier = None
+		self.m_net_two_selection_strength_exponent = None
+		self.m_net_two_num_hidden_nodes = None
+
+		self.m_ml_learning_rate = None
+		self.m_ml_discount_rate = None
+		self.m_ml_num_slots = None
+		# self.m_ml_reward_multiplier = None
+		self.m_ml_reward_exponent = None
+		self.m_ml_pessimism = None
+		self.m_ml_extinction = None
+		self.m_ml_epsilon = None
+
+	def get_ml_discount_rate(self):
+		return self.__m_ml_discount_rate
+
+	def set_ml_discount_rate(self, value):
+		self.__m_ml_discount_rate = value
+
+	def get_ml_epsilon(self):
+		return self.m_ml_epsilon
+
+	def set_ml_epsilon(self, value):
+		self.m_ml_epsilon = value
+
+	def get_ml_extinction(self):
+		return self.__m_ml_extinction
+
+	def set_ml_extinction(self, value):
+		self.__m_ml_extinction = value
+
+	def get_ml_pessimism(self):
+		return self.__m_ml_pessimism
+
+	def set_ml_pessimism(self, value):
+		self.__m_ml_pessimism = value
+
+	def get_ml_reward_exponent(self):
+		return self.m_ml_reward_exponent
+
+	def get_ml_learning_rate(self):
+		return self.__m_ml_learning_rate
+
+	def get_ml_num_slots(self):
+		return self.__m_ml_num_slots
+
+	def get_ml_reward_multiplier(self):
+		return self.__m_ml_reward_multiplier
+
+	def set_ml_learning_rate(self, value):
+		self.__m_ml_learning_rate = value
+
+	def set_ml_num_slots(self, value):
+		self.__m_ml_num_slots = value
+
+	def set_ml_reward_multiplier(self, value):
+		self.__m_ml_reward_multiplier = value
+
+	def set_ml_reward_exponent(self, value):
+		self.m_ml_reward_exponent = value
+
+	def get_net_two_num_hidden_nodes(self):
+		return self.m_net_two_num_hidden_nodes
+
+	def set_net_two_num_hidden_nodes(self, value):
+		self.m_net_two_num_hidden_nodes = value
+
+	def get_net_two_neutral_magnitude(self):
+		return self.m_net_two_neutral_magnitude
+
+	def set_net_two_neutral_magnitude(self, value):
+		self.m_net_two_neutral_magnitude = value
+
+	def get_net_two_selection_strength_multiplier(self):
+		return self.m_net_two_selection_strength_multiplier
+
+	def set_net_two_selection_strength_multiplier(self, value):
+		self.m_net_two_selection_strength_multiplier = value
+
+	def get_net_two_selection_strength_exponent(self):
+		return self.m_net_two_selection_strength_exponent
+
+	def set_net_two_selection_strength_exponent(self, value):
+		self.m_net_two_selection_strength_exponent = value
 
 	def get_net_one_magnitude_slope(self):
 		return self.m_net_one_magnitude_slope
@@ -50,10 +138,16 @@ class BehaviorsInfo(object):
 	def set_net_one_magnitude_intercept(self, value):
 		self.m_net_one_magnitude_intercept = value
 
-	def get_net_one_num_firing_hidden_nodes(self):
+	def get_net_one_neutral_magnitude(self):
+		return self.m_net_one_neutral_magnitude
+
+	def set_net_one_neutral_magnitude(self, value):
+		self.m_net_one_neutral_magnitude = value
+
+	def get_num_firing_hidden_nodes(self):
 		return self.m_net_one_num_firing_hidden_nodes
 
-	def set_net_one_num_firing_hidden_nodes(self, value):
+	def set_num_firing_hidden_nodes(self, value):
 		self.m_net_one_num_firing_hidden_nodes = value
 
 	def get_num_output_nodes(self):

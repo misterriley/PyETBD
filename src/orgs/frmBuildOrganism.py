@@ -10,7 +10,8 @@ from src.common.SampleWoutReplace import SampleWoutReplace
 from src.orgs.ETBDOrganism import ETBDOrganism
 from src.orgs.NetOneOrganism import NetOneOrganism
 from src.orgs.NetTwoOrganism import NetTwoOrganism
-from src.orgs.NullOrganism import NullOrganism
+from src.orgs.PGOrganism import PGOrganism
+from src.orgs.QLOrganism import QLOrganism
 
 
 class frmBuildOrganism(object):
@@ -109,8 +110,10 @@ class frmBuildOrganism(object):
 			self.m_objOrganism = NetOneOrganism(json_data)
 		elif ot == Constants.ORG_TYPE_NET_TWO:
 			self.m_objOrganism = NetTwoOrganism(json_data)
-		elif ot == Constants.ORG_TYPE_NULL:
-			self.m_objOrganism = NullOrganism(json_data)
+		elif ot == Constants.ORG_TYPE_PG:
+			self.m_objOrganism = PGOrganism(json_data)
+		elif ot == Constants.ORG_TYPE_QL:
+			self.m_objOrganism = QLOrganism(json_data)
 		else:
 			raise NameError("Unknown type of organism " + str(ot))
 

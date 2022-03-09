@@ -6,8 +6,10 @@
 import numpy
 
 from src.common import Constants
+from src.common import Tallies
 from src.common.CProbEmitter import CProbEmitter
 from src.common.CWriteData import CWriteData
+from src.common.Logger import log
 from src.common.RISchedule import RISchedule
 from src.common.RRSchedule import RRSchedule
 from src.common.SPSchedule import SPSchedule
@@ -55,8 +57,8 @@ class CRunConcurrent(object):
 
 		# Set properties
 		self.set_organism(myOrganism)
-		self.set_repetitions(experiment_parameters.get_repetitions())
-		self.set_generations(experiment_parameters.get_generations())
+		self.set_repetitions(experiment_parameters.get_num_repetitions())
+		self.set_generations(experiment_parameters.get_num_generations())
 		self.set_num_schedules(experiment_parameters.get_num_schedules())
 
 		# in SP schedules the number of actual generations varies - this keeps track
@@ -84,6 +86,15 @@ class CRunConcurrent(object):
 		self.m_objLstAltPhenos = [[None]]
 		self.m_lstAltTarget = [None]
 
+	def getTallies(self, intRep, intSched):
+		return Tallies.tally_schedule(intRep, intSched, self.m_intEmittedPheno, self.m_blnPhenoReinforced, self.m_blnPhenoPunished, False, None, self.m_structExpInfo)
+
+	def getBlnPhenoPunished(self):
+		return self.m_blnPhenoPunished
+
+	def getBlnPhenoReinforced(self):
+		return self.m_blnPhenoReinforced
+
 	def get_organism(self):
 		return self.m_myOrganism
 
@@ -101,20 +112,20 @@ class CRunConcurrent(object):
 		self.m_intSchedules = value
 
 	# Number of repetitions of each schedule
-	def get_repetitions(self):
+	def get_num_repetitions(self):
 		return self.m_intRepetitions
 
 	def set_repetitions(self, value):
 		self.m_intRepetitions = value
 
 	# Number of generations for each repetition
-	def get_generations(self):
+	def get_num_generations(self):
 		return self.m_intGenerations
 
 	def set_generations(self, value):
 		self.m_intGenerations = value
 
-	def giddyup(self):
+	def giddyup(self, print_status = True, write_outfile = True):
 
 		# I believe I can control everything from here, including  writing to output files.
 
@@ -123,7 +134,8 @@ class CRunConcurrent(object):
 		b_info = self.get_organism().get_behaviors_info()
 		e_info = self.get_experiment_info()
 
-		objFileWriter = CWriteData(b_info, e_info, self.m_strOutpath, self.m_strFileStub, self.get_repetitions(), self.get_generations())
+		if write_outfile:
+			objFileWriter = CWriteData(b_info, e_info, self.m_strOutpath, self.m_strFileStub, self.get_num_repetitions(), self.get_num_generations())
 
 		# Dim intRep, intSched As Integer
 
@@ -136,7 +148,7 @@ class CRunConcurrent(object):
 		# 	#Should the population be initialized (i.e., randomized) for each schedule?  Probably.
 		# 	myExperiment.txtSchedule.Text = CStr(intSched) #Write to the experiment form
 		# 	#Application.DoEvents() #So that write to the text boxes continues unimpaired.
-		# 	for intRep = 1 To self.get_repetitions()
+		# 	for intRep = 1 To self.get_num_repetitions()
 		# 		self.m_objRI1.set_mean(e_info.get_sched_values_1() # Setting the mean initializes the schedules.  Should this be initialized for every repetition?
 		# 		self.m_objRI2.set_mean(e_info.get_sched_values_2()
 		# 		Organism.reset_population() #This solves the problem of missing reinforcers!
@@ -148,8 +160,8 @@ class CRunConcurrent(object):
 		# Next intSched
 
 		# Repetitions are controlled from this loop
-		for intRep in range(self.get_repetitions()):
-			print("starting rep " + str(intRep))
+		for intRep in range(self.get_num_repetitions()):
+			log("starting rep " + str(intRep), print_status)
 
 			if self.get_experiment_info().get_t_2_lo() == 0 and self.get_experiment_info().get_t_2_hi() == 0 and self.get_experiment_info().get_sched_type_2() != Constants.SCHED_TYPE_NONE:
 				raise Exception("Not tested")
@@ -173,7 +185,7 @@ class CRunConcurrent(object):
 					raise Exception("Not tested")
 					self.m_objRIPunish1.set_mean(e_info.get_single_punishment_ri(intSched))
 
-				print("\tstarting sched " + str(intSched))
+				log("\tstarting sched " + str(intSched), print_status)
 				#Set the schedules**********************************************************************************************************
 				if e_info.get_use_sp_schedules():
 					self.m_spSched.set_FDF(e_info.get_sp_FDF(intSched))
@@ -214,7 +226,7 @@ class CRunConcurrent(object):
 						self.m_objBRR.set_mean(e_info.get_sched_value_2(intSched))
 					else:
 						raise Exception("Not tested")
-						print("Trouble in Giddyup!")
+						log("Trouble in Giddyup!", print_status)
 
 				elif e_info.get_sched_type_2() == Constants.SCHED_TYPE_NONE or e_info.get_sched_type_2() == Constants.SCHED_TYPE_EXT:
 					# Running original implementation of single schedules.  I believe you can superimpose punishment with the code as currently written.
@@ -234,7 +246,7 @@ class CRunConcurrent(object):
 					self.m_objRILF2.RRValue = e_info.get_sched_value_2(intSched)
 				else:
 					raise Exception("Not tested")
-					print("The code does ot support running the type of schedule you specified.")
+					log("The code does not support running the type of schedule you specified.", print_status)
 
 				if e_info.get_reset_between_runs():
 					self.get_organism().reset_state()  # This solves the problem of missing reinforcers! I don#t think the "Item" segment is necessary.
@@ -246,36 +258,39 @@ class CRunConcurrent(object):
 					self.do_a_prob_sched(intRep, intSched)  #  <---Runs a schedule
 				else:
 					# Running RI schedules or RI schedules with superimposed punishment.
-					self.do_a_sched(intRep, intSched)  #  <---Runs a schedule
-				print("\tfinishing sched " + str(intSched))
-			print("finishing rep " + str(intRep))
+					self.do_a_sched(intRep, intSched, print_status)  #  <---Runs a schedule
+				log("\tfinishing sched " + str(intSched), print_status)
+			log("finishing rep " + str(intRep), print_status)
 		# At this point the phenotye and reinforcement and, if applicable, punishment arrays for all repetitions and schedules are loaded.
 
-		if e_info.get_use_sp_schedules():
-			objFileWriter.set_num_actual_generations(self.m_num_actual_gens)
+		if write_outfile:
+			if e_info.get_use_sp_schedules():
+				objFileWriter.set_num_actual_generations(self.m_num_actual_gens)
 
-		# Clear info from form prior to write
-		# myExperiment.txtRepetition.Text = ""
-		# myExperiment.txtSchedule.Text = ""
+			# Clear info from form prior to write
+			# myExperiment.txtRepetition.Text = ""
+			# myExperiment.txtSchedule.Text = ""
 
-		# Write data to .csv file and summary to Excel
-		print("Writing .csv file...")
-		# Application.DoEvents()
-		objFileWriter.write_csv(self.m_blnPhenoReinforced, self.m_blnPhenoPunished, self.m_intEmittedPheno)
+			# Write data to .csv file and summary to Excel
+			log("Writing .csv file...", print_status)
+			# Application.DoEvents()
+			objFileWriter.write_csv(self.m_blnPhenoReinforced, self.m_blnPhenoPunished, self.m_intEmittedPheno)
 
-		print("Writing Excel file...")
-		objFileWriter.write_excel(self.m_blnPhenoReinforced, self.m_blnPhenoPunished, self.m_intEmittedPheno)
+			log("Writing Excel file...", print_status)
+			objFileWriter.write_excel(self.m_blnPhenoReinforced, self.m_blnPhenoPunished, self.m_intEmittedPheno)
 
-		# My.Computer.Audio.Play(My.Resources._22Fillywhinnygrunt2000, AudioPlayMode.Background)
-		# print("Done giddyuped!")
-		# print("Last phenotype = " & CStr(intEmittedPheno(Schedules, Repetitions, Generations)))
-		# 22Fillywhinnygrunt2000  My.Computer.Audio.Play(My.Resources.alonebad, AudioPlayMode.Background)
+			# My.Computer.Audio.Play(My.Resources._22Fillywhinnygrunt2000, AudioPlayMode.Background)
+			# print("Done giddyuped!")
+			# print("Last phenotype = " & CStr(intEmittedPheno(Schedules, Repetitions, Generations)))
+			# 22Fillywhinnygrunt2000  My.Computer.Audio.Play(My.Resources.alonebad, AudioPlayMode.Background)
 
-	def do_a_sched(self, intRep, intSched):
+	def do_a_sched(self, intRep, intSched, print_status = True):
 
 		# Runs a schedule and saves the results of each generation.
 		e_info = self.get_experiment_info()
 		intGen = intEmittedPhenoClass = 0
+		intLastEmittedPhenoClass = None
+		intLastChangeover = None
 		blnRR = False  # Set equal to True if random ratios are being run in the components
 		blnNRR = False  # Set equal to True for nonindependent concurrent ratio schedule
 		blnRILF = False  # Set equal to True for RI schedule with linear feedback
@@ -307,7 +322,7 @@ class CRunConcurrent(object):
 		dblPunishProb2 = 0  # for alternative 2, calculated from intValAgg array.
 		dblA = self.m_myOrganism.get_behaviors_info().get_fomo_a()  # for manipulating the reinforcement loss aversion.  0.76 should decrease it, for example.
 
-		num_gens = e_info.get_generations() if not e_info.get_use_sp_schedules() else GENS_FOR_SP_SCHEDULES
+		num_gens = e_info.get_num_generations() if not e_info.get_use_sp_schedules() else GENS_FOR_SP_SCHEDULES
 
 		for intGen in range(num_gens):
 
@@ -316,14 +331,14 @@ class CRunConcurrent(object):
 				break
 
 			if intGen % PRINT_EVERY_N_GENS == 0:
-				print("\t\tgeneration " + str(intGen))
+				log("\t\t" + str(intRep + 1) + "/" + str(intSched + 1) + "/" + str(intGen), print_status)
 
 			# Get a behavior
 			if self.get_organism().is_ready_to_emit():  # I don#t think the "Item" segment is necessary.
 				self.m_intEmittedPheno[intRep, intSched, intGen] = self.get_organism().emit_behavior().get_integer_value()  # I don#t think the "Item" segment is necessary.
 			else:
 				raise Exception("Not tested")
-				print("Not ready to emit!")
+				log("Not ready to emit!", print_status)
 
 			# Advance the schedule timers and/or response counters
 			if e_info.get_t_2_lo() == 0 and e_info.get_t_2_hi() == 0 and e_info.get_sched_type_2() != Constants.SCHED_TYPE_None:
@@ -341,7 +356,7 @@ class CRunConcurrent(object):
 					# objBgrRR.response()# This advances only if T2 is emitted
 				else:
 					raise Exception("Not tested")
-					print("Trouble in DoASched!")
+					log("Trouble in DoASched!", print_status)
 
 			elif e_info.get_sched_type_2() == Constants.SCHED_TYPE_NONE:
 				# Running the originial implementation of an RI schedule
@@ -376,7 +391,7 @@ class CRunConcurrent(object):
 				self.m_objRILF2.tick_tock()
 			else:
 				raise Exception("Not tested")
-				print("Trouble in DoASched II!")
+				log("Trouble in DoASched II!", print_status)
 
 			# response counters for RR and NRR schedules are advanced in self.check_for_targets
 
@@ -407,6 +422,12 @@ class CRunConcurrent(object):
 				# Running a (more or less) normal concurrent schedule of one sort or another
 				intEmittedPhenoClass = self.check_for_targets(self.m_intEmittedPheno[intRep, intSched, intGen], blnRR, blnNRR, blnRILF)  # (0 = no target; 1 = Target 1; 2 = Target 2)
 
+			if intEmittedPhenoClass != 0:
+				if intLastEmittedPhenoClass is not None and intLastEmittedPhenoClass != intEmittedPhenoClass:
+					intLastChangeover = intGen
+
+				intLastEmittedPhenoClass = intEmittedPhenoClass
+
 			# Check for punishment
 			if blnPunishmentFirst:  # This is now set = True apparently permanently (12/2019)
 				# Check for punishment first and inform the organism of the result.
@@ -433,7 +454,7 @@ class CRunConcurrent(object):
 						dblPunishProb = dblPunishProb2
 					else:
 						raise Exception("Not tested")
-						print("Trouble in DoASched")
+						log("Trouble in DoASched", print_status)
 
 					if self.check_for_punishment(intEmittedPhenoClass, dblPunishProb):
 						# Update the punishment array
@@ -448,7 +469,7 @@ class CRunConcurrent(object):
 				if e_info.get_sched_type_2() == Constants.SCHED_TYPE_EXT and intEmittedPhenoClass == 2:
 					raise Exception("Not tested")
 					intEmittedPhenoClass = 0  # Running Conc RI EXT:  no reinforcement for PhenoClass 2
-				if self.check_for_reinforcement(intEmittedPhenoClass, blnNoRMOnPunishment, blnPunishmentDelivered, blnRR, blnNRR, blnRILF, intSched):
+				if self.check_for_reinforcement(intEmittedPhenoClass, blnNoRMOnPunishment, blnPunishmentDelivered, blnRR, blnNRR, blnRILF, intSched, intGen, intLastChangeover, print_status):
 					# Update the value aggregator
 					intValAgg[intEmittedPhenoClass] += 1
 					# Update the reinforcement array
@@ -456,7 +477,7 @@ class CRunConcurrent(object):
 
 			else:
 				raise Exception("Not tested")
-				print("There is a problem in DoASched")
+				log("There is a problem in DoASched", print_status)
 				#I don#t think the new method of not recombining or mutating if only punishment is delivered will work here in this case******
 				# I believe the code will have to be substantially rewritten to make this happen.  Before checking for reinforcement here I will have
 				# to know whether punishment occured so that if no reinforcement is delivered, no recombination/mutation will occur.
@@ -465,7 +486,7 @@ class CRunConcurrent(object):
 				# Check for reinforcement first and inform the organism of the result
 				# This will not work for differnetial punishment!!!  Modification required*********************************  Plus I
 				# have commented out some of the code due to changes in self.check_for_punishment
-				if self.check_for_reinforcement(intEmittedPhenoClass, blnNoRMOnPunishment, blnPunishmentDelivered, blnRR, blnNRR, blnRILF, intSched):
+				if self.check_for_reinforcement(intEmittedPhenoClass, blnNoRMOnPunishment, blnPunishmentDelivered, blnRR, blnNRR, blnRILF, intSched, intGen, intLastChangeover):
 					# Update the reinforcement array
 					self.m_blnPhenoReinforced[intRep, intSched, intGen] = True
 
@@ -480,11 +501,21 @@ class CRunConcurrent(object):
 					# 	blnPunishmentDelivered = False
 					#
 
-	def check_for_reinforcement(self, intEmittedPhenoClass, blnNoRMOnPunishment, blnPunishmentDelivered, blnRR, blnNRR, blnRILF, intSched):
+	def check_for_reinforcement(self, intEmittedPhenoClass, blnNoRMOnPunishment, blnPunishmentDelivered, blnRR, blnNRR, blnRILF, intSched, intGen, intLastChangeover, print_status):
 
 		# if blnRR is true, then running a conc RR RR.  if blnNRR is true, then running a nonindependent conc RR RR
 
 		e_info = self.get_experiment_info()
+
+		# Changeover delay in effect? No reinforcement
+		if intLastChangeover is not None and intGen - intLastChangeover < e_info.get_COD():
+			self.get_organism().set_selection(0, False)
+			if intGen != intLastChangeover:
+				print("CO not met", print_status)
+			return False
+
+		# print("CO met")
+
 		#Indendent or nonindependent Conc RR RR ***************************************************************************
 		if blnRR or blnNRR:
 			if intEmittedPhenoClass == 1:
@@ -514,7 +545,7 @@ class CRunConcurrent(object):
 				return False
 			else:
 				raise Exception("Not tested")
-				print("Trounble in CheckForReinforcement when blnRR is True.")
+				log("Trouble in CheckForReinforcement when blnRR is True.", print_status)
 
 		#RI with linear feedback components in a concurrent schedule ******************************************************
 		if blnRILF:
@@ -556,7 +587,7 @@ class CRunConcurrent(object):
 				return False
 			else:
 				raise Exception("Not tested")
-				print("Trounble in CheckForReinforcement when blnRILF is True.")
+				log("Trouble in CheckForReinforcement when blnRILF is True.", print_status)
 
 		#Original implementation of an RI schedule **********************************************************************
 		if e_info.get_sched_type_2() == Constants.SCHED_TYPE_NONE:
@@ -603,7 +634,7 @@ class CRunConcurrent(object):
 				return False
 			else:
 				raise Exception("Not tested")
-				print("Trounble in CheckForReinforcement for original implementation of single schedules.")
+				log("Trouble in CheckForReinforcement for original implementation of single schedules.", print_status)
 
 		#Conc RI RI, Conc RI EXT, or single RI with background reinforcement ******************************************************************************************************
 		# This is the default
@@ -687,7 +718,7 @@ class CRunConcurrent(object):
 			return False
 		else:
 			raise Exception("Not tested")
-			print("Trounble in CheckForReinforcement.")
+			log("Trouble in CheckForReinforcement.", print_status)
 
 	def check_for_targets_single_sched(self, intEmittedPheno, intSched):
 
@@ -733,7 +764,7 @@ class CRunConcurrent(object):
 		# Dim intValAgg(2) As Integer # Note that this declaration also reinitializes the value aggregators for each new schedule (pair)
 		# Dim dblPunishProb = 0 # for alternative 1, calculated from intValAgg array.
 
-		for intGen in range(1, self.get_generations() + 1):
+		for intGen in range(1, self.get_num_generations() + 1):
 			# myExperiment.txtGeneration.Text = CStr(intGen) #Write to the experiment form.
 			# Get a behavior
 			if self.get_organism().is_ready_to_emit():  # I don#t think the "Item" segment is necessary.

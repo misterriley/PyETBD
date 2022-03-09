@@ -1,5 +1,5 @@
 { 
-	"org_type":"NET_ONE",
+	"org_type":"NET_TWO",
 	"run_duration":200000,
 	"schedule_1_scale":40,
 	"schedule_2_scale":40,

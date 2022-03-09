@@ -6,24 +6,26 @@ Created on Jan 10, 2022
 import os
 import winsound
 
+import numpy
 import xlsxwriter
 
 from src.common import Converter, JSONData
+from src.orgs.NetTwoOrganism import NetTwoOrganism
 from src.orgs.frmBuildOrganism import frmBuildOrganism
 
-TARGET_R_COUNT = 5
+TARGET_R_COUNT = 1
 EXTINCTION_B_COUNT = 100
 REPETITIONS = 10000
-PRINT_EVERY = 100
+PRINT_EVERY = 10
 DEFAULT_OUTPUT_DIR = "../../outputs/"
 DIR = "../../inputs/"
 FILE_NAME = "extinction.json"
 
 
-def check_for_targets(pheno):
-	if pheno >= 471 and pheno <= 511:
+def check_for_targets(pheno, t1Lo, t1Hi, t2Lo, t2Hi):
+	if pheno >= t1Lo and pheno <= t1Hi:
 		return 1
-	if pheno >= 512 and pheno <= 552:
+	if pheno >= t2Lo and pheno <= t2Hi:
 		return 2
 	return 0
 
@@ -51,7 +53,14 @@ if __name__ == '__main__':
 	org_builder.create_an_organism(json_data)
 	org = org_builder.get_creature()
 	# load up with reinforcers
-	counts = [[None, 0, 0] for i in range(EXTINCTION_B_COUNT)]
+	counts = [[0, 0, 0] for i in range(EXTINCTION_B_COUNT)]
+	record = [[0 for i in range(REPETITIONS)] for j in range(EXTINCTION_B_COUNT)]
+
+	t1Lo = json_data.get_t_1_lo(0)
+	t1Hi = json_data.get_t_1_hi(0)
+	t2Lo = json_data.get_t_2_lo(0)
+	t2Hi = json_data.get_t_2_hi(0)
+
 	for rep_index in range(REPETITIONS):
 		if rep_index % PRINT_EVERY == 0:
 			print("starting repetition " + str(rep_index))
@@ -62,7 +71,7 @@ if __name__ == '__main__':
 			beh = org.emit_behavior()
 			pheno = beh.get_integer_value()
 
-			tc = check_for_targets(pheno)
+			tc = check_for_targets(pheno, t1Lo, t1Hi, t2Lo, t2Hi)
 			if tc == 1:
 				org.set_selection(40, True)
 				r_count += 1
@@ -72,10 +81,14 @@ if __name__ == '__main__':
 		for i in range(EXTINCTION_B_COUNT):
 			beh = org.emit_behavior()
 			pheno = beh.get_integer_value()
-			tc = check_for_targets(pheno)
-			if tc == 1 or tc == 2:
-				counts[i][tc] += 1
+			tc = check_for_targets(pheno, t1Lo, t1Hi, t2Lo, t2Hi)
+			counts[i][tc] += 1
 			org.set_selection(0, False)
+			if tc == 2:
+				tc = -1  # easier for correlation calculations
+			record[i][rep_index] = tc
+
+	corr_coefs = numpy.corrcoef(record)
 
 	output_path = get_out_file_path()
 	excel_file = output_path + "extinction_test.xlsx"
@@ -87,8 +100,13 @@ if __name__ == '__main__':
 			row = write_excel_and_increment_row(exp_sheet, ["FDF_MEAN", json_data.get_FDF_mean_2(0, 0)], row)
 			row = write_excel_and_increment_row(exp_sheet, ["TARGET_R_COUNT", TARGET_R_COUNT], row)
 			row = write_excel_and_increment_row(exp_sheet, ["REPETITIONS", REPETITIONS], row)
+			if isinstance(org, NetTwoOrganism):
+				row = write_excel_and_increment_row(exp_sheet, ["NET_TWO_HIDDEN_NODE_FIRING_PROBABILITY", json_data.get_net_two_hidden_node_firing_probability()], row)
+				row = write_excel_and_increment_row(exp_sheet, ["NET_TWO_NEUTRAL_MAGNITUDE_CONSTANT", json_data.get_net_two_neutral_magnitude_constant()], row)
+				row = write_excel_and_increment_row(exp_sheet, ["NET_TWO_SELECTION_STRENGTH_MULTIPLIER", json_data.get_net_two_selection_strength_multiplier()], row)
+
 			row = write_excel_and_increment_row(exp_sheet, [], row)
-			row = write_excel_and_increment_row(exp_sheet, ["POST_REINFORCEMENT_INDEX", "B1/(B1+B2)"], row)
+			row = write_excel_and_increment_row(exp_sheet, ["POST_REINFORCEMENT_INDEX", "B1/(B1+B2)", "B1", "B2", "Other", "Correlation w/ Output at 0"], row)
 
 			for i in range(EXTINCTION_B_COUNT):
 				count_1 = counts[i][1]
@@ -97,7 +115,7 @@ if __name__ == '__main__':
 					ratio = "0/0"
 				else:
 					ratio = count_1 / (count_1 + count_2)
-				row = write_excel_and_increment_row(exp_sheet, [i, ratio], row)
+				row = write_excel_and_increment_row(exp_sheet, [i, ratio, count_1, count_2, counts[i][0], corr_coefs[i][0]], row)
 	except Exception as ex:
 		print(ex)
 

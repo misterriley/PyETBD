@@ -1,4 +1,8 @@
 { 
 	"org_type":"ETBD",
-	"experiments":[]
+	"experiments":[],
+	"num_firing_hidden_nodes":2,
+	"net_one_magnitude_slope":-0.70,
+	"net_one_magnitude_intercept":0.55,
+	"net_one_neutral_magnitude":0.08
 }

@@ -15,10 +15,11 @@ class NetOneOrganism(AnOrganism):
 		super().__init__(json_data)
 		self.num_hidden_nodes = json_data.get_num_hidden_nodes()
 		self.num_output_nodes = json_data.get_num_output_nodes()
-		self.hidden_firing_nodes = json_data.get_net_one_num_firing_hidden_nodes()
-		self.mutation_rate = json_data.get_mutation_rate()
+		self.hidden_firing_nodes = json_data.get_num_firing_hidden_nodes()
+		self.mutation_rate = json_data.get_net_one_mutation_rate_multiplier() * json_data.get_mutation_rate()
 		self.net_one_magnitude_slope = json_data.get_net_one_magnitude_slope()
 		self.net_one_magnitude_intercept = json_data.get_net_one_magnitude_intercept()
+		self.net_one_neutral_magnitude = json_data.get_net_one_neutral_magnitude()
 
 	def reset_state(self):
 		# real-valued synapse matrix, dimension is h x o (h = num hidden, o = num output)
@@ -62,22 +63,24 @@ class NetOneOrganism(AnOrganism):
 		on_bits = numpy.random.choice(range(len(self.hidden_nodes)), self.hidden_firing_nodes, replace = False)
 		self.hidden_nodes[on_bits] = 1
 
-	def convert_selection_param(self, selectionParameter):
+	@staticmethod
+	def convert_selection_param(selectionParameter, net_one_magnitude_intercept, net_one_magnitude_slope):
 		# the selection parameter comes in as an FDF, must go out as a probability of flipping synapses
 		# selectionParameter == infinity --> return 0
 		# selectionParameter == 0 --> return 1
-		return self.net_one_magnitude_intercept + self.net_one_magnitude_slope * numpy.log10(selectionParameter / 40)
+		return net_one_magnitude_intercept + net_one_magnitude_slope * numpy.log10(selectionParameter / 40)
 
 	def set_selection(self, selectionParameter, value):
 
 		if value:
+			converted_selection_param = self.convert_selection_param(selectionParameter, self.net_one_magnitude_intercept, self.net_one_magnitude_slope)
+		else:
+			converted_selection_param = self.net_one_neutral_magnitude
 
-			converted_selection_param = self.convert_selection_param(selectionParameter)
-
-			# for net type one, reinforcement probabilistically flips some synapses toward the output
-			target_weights = numpy.array([2 * self.output_nodes - 1, ] * self.num_hidden_nodes)
-			rands = numpy.random.uniform(size = target_weights.shape)
-			self.synapses = numpy.where(rands < converted_selection_param, target_weights, self.synapses)
+		# for net type one, reinforcement probabilistically flips some synapses toward the output
+		target_weights = numpy.array([2 * self.output_nodes - 1, ] * self.num_hidden_nodes)
+		rands = numpy.random.uniform(size = target_weights.shape)
+		self.synapses = numpy.where(rands < converted_selection_param, target_weights, self.synapses)
 
 		self.apply_mutation()
 
